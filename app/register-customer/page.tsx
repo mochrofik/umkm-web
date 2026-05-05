@@ -4,6 +4,7 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ChevronLeft } from "lucide-react";
+import { getData, postData } from "@/helper/apiHelper";
 
 // Define interface untuk data form
 interface RegisterCustomerFormData {
@@ -33,21 +34,12 @@ export default function RegisterUMKM() {
     setLoading(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-      const url = `${baseUrl}api/register`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
+      const response = await postData(`register`, formData, router);
+      if (response.success) {
         toast.success("Pendaftaran Berhasil!");
         router.push("/login");
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || "Pendaftaran gagal");
+        toast.error(response.message || "Pendaftaran gagal");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -60,15 +52,11 @@ export default function RegisterUMKM() {
   const loginGoogle = async () => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-      const url = `${baseUrl}api/auth/google/customer`;
+      const url = `auth/google/customer`;
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await getData(url);
 
-      const data = await response.json();
+      const data = (await response.data) as any;
       localStorage.setItem("pending_role", data.role);
       window.location.href = data.url;
     } catch (e) {

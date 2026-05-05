@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/AuthContext";
+import { getData, postData } from "@/helper/apiHelper";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -33,16 +34,9 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await fetch(`${url}api/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const response = await postData(`login`, formData, router);
+      if (response.success) {
+        const data = (await response.data) as any;
         const role = data.data.role[0];
 
         login(data.data.user, role, data.data.access_token);
@@ -53,7 +47,7 @@ export default function LoginPage() {
           router.push("/");
         }
       } else {
-        const errorData = await response.json();
+        const errorData = (await response.data) as any;
         toast.error(JSON.stringify(errorData.message));
       }
     } catch (error) {
@@ -66,15 +60,9 @@ export default function LoginPage() {
 
   const loginGoogle = async () => {
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await fetch(`${url}api/auth/google/login`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const response = await getData(`auth/google/login`);
+      if (response.success) {
+        const data = (await response.data) as any;
         window.location.href = data.url;
       }
     } catch (error) {

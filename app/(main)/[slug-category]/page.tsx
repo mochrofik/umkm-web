@@ -2,6 +2,7 @@
 
 import Loading from "@/components/Loading";
 import CardStoreByCategory from "@/components/main/CardStoreByCategory";
+import { getData } from "@/helper/apiHelper";
 import { getCurrentLocation, LocationData } from "@/helper/locationHelper";
 import { Store } from "@/types/stores";
 import { ChevronLeft, Search } from "lucide-react";
@@ -16,11 +17,7 @@ export default function CategoryPage() {
   const pathSegments = pathName.split("/").filter((item) => item !== "");
 
   const categoryTitle = pathSegments
-    .map((s) =>
-      s
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-    )
+    .map((s) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
     .join(" / ");
 
   const [dataLocation, setDataLocation] = useState<LocationData>();
@@ -29,16 +26,15 @@ export default function CategoryPage() {
   const fetchData = async (lat?: number, lng?: number) => {
     setLoadingState(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      let endpoint = `${url}api/get-store-by-category?category=${pathName.replaceAll("/", "")}`;
+      let endpoint = `get-store-by-category?category=${pathName.replaceAll("/", "")}`;
       if (lat && lng) {
         endpoint += `&lat=${lat}&lng=${lng}`;
       }
-      const response = await fetch(endpoint);
+      const response = await getData(endpoint);
 
       if (response.status == 200) {
-        const data = await response.json();
-        setStoreData(data.data);
+        const data = (await response.data) as Store[];
+        setStoreData(data);
       }
     } catch (error) {
       toast.error("Terjadi kesalahan");
@@ -101,10 +97,9 @@ export default function CategoryPage() {
               {pathSegments.map((segment, index) => {
                 const href = `/${pathSegments.slice(0, index + 1).join("/")}`;
                 const isLast = index === pathSegments.length - 1;
-                const title =
-                  segment
-                    .replace(/-/g, " ")
-                    .replace(/\b\w/g, (c) => c.toUpperCase());
+                const title = segment
+                  .replace(/-/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase());
 
                 return (
                   <li key={href} className="flex items-center">

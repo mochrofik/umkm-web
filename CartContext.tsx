@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
 import { useAuth } from "./AuthContext";
 import api from "@/utils/axios";
 import toast from "react-hot-toast";
@@ -40,11 +47,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const fetchCart = useCallback(async () => {
     if (!token || role !== "customer") return;
-    
+
     setLoading(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await api.get(`${url}api/cart`);
+      const response = await api.get(`cart`);
       if (response.data.success) {
         const items = response.data.data.items.map((item: any) => ({
           id: item.id, // Database item ID
@@ -54,7 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           quantity: item.quantity,
           image_url: item.product.logo_url,
           store_id: item.product.store_id,
-          store_name: item.product.store?.name || "Toko"
+          store_name: item.product.store?.name || "Toko",
         }));
         setCart(items);
       }
@@ -71,13 +77,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const savedCart = localStorage.getItem("cart");
       if (savedCart && token && role === "customer") {
         try {
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
           const localItems: CartItem[] = JSON.parse(savedCart);
           if (localItems.length > 0) {
             for (const item of localItems) {
-              await api.post(`${url}api/cart/add`, {
+              await api.post(`cart/add`, {
                 product_id: item.product_id || item.id,
-                quantity: item.quantity
+                quantity: item.quantity,
               });
             }
             localStorage.removeItem("cart");
@@ -106,7 +111,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsInitialized(true);
   }, [token, role, fetchCart]);
 
-
   useEffect(() => {
     if (isInitialized && (!token || role !== "customer")) {
       localStorage.setItem("cart", JSON.stringify(cart));
@@ -116,12 +120,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = async (item: CartItem) => {
     if (token && role === "customer") {
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-        const response = await api.post(`${url}api/cart/add`, {
+        const response = await api.post(`cart/add`, {
           product_id: item.product_id || item.id, // Frontend uses product.id for adding
-          quantity: item.quantity
+          quantity: item.quantity,
         });
-        
+
         if (response.data.success) {
           fetchCart(); // Refresh to get correct IDs from DB
         }
@@ -134,7 +137,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const existingItem = prevCart.find((i) => i.id === item.id);
         if (existingItem) {
           return prevCart.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+            i.id === item.id
+              ? { ...i, quantity: i.quantity + item.quantity }
+              : i,
           );
         }
         return [...prevCart, item];
@@ -145,8 +150,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = async (id: string | number) => {
     if (token && role === "customer") {
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-        const response = await api.delete(`${url}api/cart/remove/${id}`);
+        const response = await api.delete(`cart/remove/${id}`);
         if (response.data.success) {
           setCart((prevCart) => prevCart.filter((item) => item.id !== id));
         }
@@ -167,11 +171,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (token && role === "customer") {
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-        const response = await api.put(`${url}api/cart/update/${id}`, { quantity });
+        const response = await api.put(`cart/update/${id}`, {
+          quantity,
+        });
         if (response.data.success) {
           setCart((prevCart) =>
-            prevCart.map((item) => (item.id === id ? { ...item, quantity } : item))
+            prevCart.map((item) =>
+              item.id === id ? { ...item, quantity } : item,
+            ),
           );
         }
       } catch (error) {
@@ -180,7 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } else {
       setCart((prevCart) =>
-        prevCart.map((item) => (item.id === id ? { ...item, quantity } : item))
+        prevCart.map((item) => (item.id === id ? { ...item, quantity } : item)),
       );
     }
   };
@@ -188,8 +195,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = async () => {
     if (token && role === "customer") {
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-        const response = await api.delete(`${url}api/cart/clear`);
+        const response = await api.delete(`cart/clear`);
         if (response.data.success) {
           setCart([]);
         }
@@ -213,33 +219,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      
       // Group items by store_id
       const storeGroups: { [key: string]: any[] } = {};
-      cart.forEach(item => {
+      cart.forEach((item) => {
         if (!storeGroups[item.store_id]) {
           storeGroups[item.store_id] = [];
         }
         storeGroups[item.store_id].push({
           product_id: item.product_id || item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
         });
       });
 
       // Send checkout request for each store
-      const checkoutPromises = Object.keys(storeGroups).map(storeId => {
-        return api.post(`${url}api/order-customer/checkout`, {
+      const checkoutPromises = Object.keys(storeGroups).map((storeId) => {
+        return api.post(`order-customer/checkout`, {
           store_id: storeId,
           items: storeGroups[storeId],
           delivery_address: deliveryAddress,
           notes: notes,
-          payment_method: 'cash' // Default for now
+          payment_method: "cash", // Default for now
         });
       });
 
       await Promise.all(checkoutPromises);
-      
+
       toast.success("Pesanan berhasil dibuat!");
       await clearCart();
       router.push("/"); // Redirect to customer orders page
@@ -253,9 +257,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   const totalItems = cart.reduce((sum, item) => sum + Number(item.quantity), 0);
-  const totalPrice = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
+  const totalPrice = cart.reduce(
+    (sum, item) => sum + Number(item.price) * Number(item.quantity),
+    0,
+  );
 
   return (
     <CartContext.Provider
@@ -268,7 +274,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         checkout,
         totalItems,
         totalPrice,
-        loading
+        loading,
       }}
     >
       {children}
@@ -283,4 +289,3 @@ export function useCart() {
   }
   return context;
 }
-

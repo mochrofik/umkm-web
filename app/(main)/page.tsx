@@ -2,7 +2,9 @@
 
 import { useAuth } from "@/AuthContext";
 import CardStore from "@/components/main/CardStore";
+import { getData } from "@/helper/apiHelper";
 import { Store } from "@/types/stores";
+import api from "@/utils/axios";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -54,14 +56,13 @@ export default function HomePage() {
   ): Promise<void> => {
     try {
       setLoading(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await fetch(
-        `${url}api/categories-user?page=${page}&limit=${limit}`,
+      const response = await getData(
+        `categories-user?page=${page}&limit=${limit}`,
       );
 
-      if (!response.ok) throw new Error("Gagal fetch");
+      if (!response.status) throw new Error("Gagal fetch");
 
-      const data: CategoryResponse = await response.json();
+      const data: CategoryResponse = response.data as CategoryResponse;
 
       setCategories(data.data.data);
       setCurrentpage(data.data.current_page || 1);
@@ -124,17 +125,10 @@ export default function HomePage() {
     } else {
       setLoading(true);
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-        const response = await fetch(
-          `${url}api/get-nearby?lat=${lat}&lng=${lng}`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          },
-        );
+        const response = await getData(`get-nearby?lat=${lat}&lng=${lng}`);
 
         if (response.status === 200) {
-          const data: NearbyResponse = await response.json();
+          const data: NearbyResponse = (await response.data) as NearbyResponse;
           setStoreNearBy(data.data);
         }
       } catch (error) {
@@ -173,7 +167,11 @@ export default function HomePage() {
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
       <div className="relative h-[230px] sm:h-[300px] flex items-center justify-center bg-gray-900 overflow-hidden">
-        <img src={"/banner.png"} className="w-full h-full object-cover" alt="Banner" />
+        <img
+          src={"/banner.png"}
+          className="w-full h-full object-cover"
+          alt="Banner"
+        />
       </div>
 
       <div className="max-w-xl mx-auto mt-10">
@@ -224,7 +222,9 @@ export default function HomePage() {
       </div>
 
       {/* Lokasi */}
-      <div className="mx-auto max-w-xl text-center text-poppins text-black">Cari UMKM Terdekat</div>
+      <div className="mx-auto max-w-xl text-center text-poppins text-black">
+        Cari UMKM Terdekat
+      </div>
       <div className="mt-10 max-w-xl mx-auto bg-white rounded-[2rem] shadow-sm border p-8">
         <label className="font-poppins block text-gray-700 text-sm font-medium mb-2 ml-1">
           Lokasi saya saat ini
@@ -314,7 +314,7 @@ export default function HomePage() {
             </div>
             <div className="h-px flex-1 bg-gray-200 mx-6 hidden sm:block" />
           </div>
-          
+
           <div className="grid grid-cols-1 gap-6">
             {storeNearby.map((item) => (
               <CardStore data={item} key={item.id} />
@@ -322,7 +322,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

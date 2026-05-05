@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { Store, Product } from "@/types/stores";
 import Loading from "@/components/Loading";
 import { useCart } from "@/CartContext";
+import { getData } from "@/helper/apiHelper";
 
 interface StoreDetailResponse {
   success: boolean;
@@ -26,14 +27,14 @@ export default function StoreDetailPage() {
   const fetchStoreDetail = async () => {
     try {
       setLoading(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await fetch(`${url}api/get-store-by-slug/${slug}`);
+      const response = await getData(`get-store-by-slug/${slug}`);
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error("Gagal mengambil detail toko");
       }
 
-      const data: StoreDetailResponse = await response.json();
+      const data: StoreDetailResponse =
+        (await response.data) as StoreDetailResponse;
       setStore(data.data);
     } catch (error) {
       console.error(error);
@@ -71,7 +72,7 @@ export default function StoreDetailPage() {
 
   const handleAddToCart = (product: Product) => {
     if (!store) return;
-    
+
     addToCart({
       id: product.id,
       name: product.name,
@@ -79,15 +80,15 @@ export default function StoreDetailPage() {
       quantity: 1,
       image_url: product.logo_url,
       store_id: store.id,
-      store_name: store.name
+      store_name: store.name,
     });
-    
+
     toast.success(`${product.name} ditambahkan ke keranjang`, {
-      icon: '🛒',
+      icon: "🛒",
       style: {
-        borderRadius: '12px',
-        background: '#333',
-        color: '#fff',
+        borderRadius: "12px",
+        background: "#333",
+        color: "#fff",
       },
     });
   };
@@ -107,9 +108,13 @@ export default function StoreDetailPage() {
           <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
             <Search className="text-red-500" size={40} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Toko Tidak Ditemukan</h1>
-          <p className="text-gray-500 mb-8">Maaf, toko yang Anda cari tidak tersedia atau sudah tidak aktif.</p>
-          <Link 
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Toko Tidak Ditemukan
+          </h1>
+          <p className="text-gray-500 mb-8">
+            Maaf, toko yang Anda cari tidak tersedia atau sudah tidak aktif.
+          </p>
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all shadow-lg"
           >
@@ -126,17 +131,17 @@ export default function StoreDetailPage() {
       <div className="relative h-[250px] sm:h-[350px] w-full overflow-hidden">
         {/* Banner Image */}
         <div className="absolute inset-0 bg-gray-900">
-          <img 
-            src="/banner.png" 
-            alt="Store Banner" 
+          <img
+            src="/banner.png"
+            alt="Store Banner"
             className="w-full h-full object-cover opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         </div>
 
         {/* Back Button */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="absolute top-6 left-6 z-[2] bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40 transition-all"
         >
           <ChevronLeft size={24} />
@@ -146,8 +151,8 @@ export default function StoreDetailPage() {
         <div className="absolute bottom-0 left-0 w-full p-6 sm:p-10 flex flex-col sm:flex-row items-end sm:items-center gap-6 z-[1]">
           {/* Logo */}
           <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-4 border-white shadow-2xl bg-white flex-shrink-0">
-            <Image 
-              src={store.logo_url || "/default-store.png"} 
+            <Image
+              src={store.logo_url || "/default-store.png"}
               alt={store.name}
               fill
               className="object-cover"
@@ -167,10 +172,12 @@ export default function StoreDetailPage() {
               </div>
               <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
                 <MapPin size={16} />
-                <span className="truncate max-w-[200px] sm:max-w-none">{store.address}</span>
+                <span className="truncate max-w-[200px] sm:max-w-none">
+                  {store.address}
+                </span>
               </div>
               <div className="flex items-center gap-3">
-                {store.is_open == "1" || store.is_open === "true"  ? (
+                {store.is_open == "1" || store.is_open === "true" ? (
                   <div className="flex items-center gap-1.5 bg-green-500/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
                     <div className="w-2 h-2 rounded-full bg-green-200 animate-pulse" />
                     <span>Buka</span>
@@ -181,10 +188,12 @@ export default function StoreDetailPage() {
                     <span>Tutup</span>
                   </div>
                 )}
-                
+
                 <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
                   <Clock size={16} />
-                  <span>{formatTime(store.open_at)} - {formatTime(store.close_at)}</span>
+                  <span>
+                    {formatTime(store.open_at)} - {formatTime(store.close_at)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -195,39 +204,54 @@ export default function StoreDetailPage() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-8 relative z-[5]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column: Menu */}
           <div className="lg:col-span-2 space-y-10">
             {store.menu_categories && store.menu_categories.length > 0 ? (
               store.menu_categories.map((category) => (
-                <div key={category.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div
+                  key={category.id}
+                  className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+                >
                   <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-800 font-poppins">{category.name}</h2>
-                      {category.description && <p className="text-sm text-gray-500 mt-1">{category.description}</p>}
+                      <h2 className="text-xl font-bold text-gray-800 font-poppins">
+                        {category.name}
+                      </h2>
+                      {category.description && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {category.description}
+                        </p>
+                      )}
                     </div>
                     <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">
                       {category.products.length} Menu
                     </span>
                   </div>
-                  
+
                   <div className="divide-y divide-gray-100">
                     {category.products.map((product) => (
-                      <div key={product.id} className="p-6 flex gap-6 hover:bg-blue-50/30 transition-colors group">
+                      <div
+                        key={product.id}
+                        className="p-6 flex gap-6 hover:bg-blue-50/30 transition-colors group"
+                      >
                         {/* Product Image */}
                         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                          <Image 
-                            src={product.logo_url || "/default-product.png"} 
+                          <Image
+                            src={product.logo_url || "/default-product.png"}
                             alt={product.name}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
                             unoptimized
                           />
                           {product.rating && (
-                             <div className="absolute bottom-1 right-1 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-0.5 shadow-sm">
-                               <Star size={10} className="text-yellow-500" fill="currentColor" />
-                               {formatRating(product.rating)}
-                             </div>
+                            <div className="absolute bottom-1 right-1 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-0.5 shadow-sm">
+                              <Star
+                                size={10}
+                                className="text-yellow-500"
+                                fill="currentColor"
+                              />
+                              {formatRating(product.rating)}
+                            </div>
                           )}
                         </div>
 
@@ -245,7 +269,7 @@ export default function StoreDetailPage() {
                             <span className="text-blue-700 font-extrabold text-xl font-poppins">
                               {formatCurrency(product.price)}
                             </span>
-                            <button 
+                            <button
                               onClick={() => handleAddToCart(product)}
                               className="bg-orange-500 hover:bg-orange-600 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95"
                             >
@@ -263,8 +287,12 @@ export default function StoreDetailPage() {
                 <div className="text-gray-400 mb-4 flex justify-center">
                   <Search size={48} opacity={0.5} />
                 </div>
-                <h3 className="text-lg font-bold text-gray-700">Belum ada menu</h3>
-                <p className="text-gray-500">Toko ini belum mengunggah menu makanan atau minuman.</p>
+                <h3 className="text-lg font-bold text-gray-700">
+                  Belum ada menu
+                </h3>
+                <p className="text-gray-500">
+                  Toko ini belum mengunggah menu makanan atau minuman.
+                </p>
               </div>
             )}
           </div>
@@ -273,17 +301,22 @@ export default function StoreDetailPage() {
           <div className="space-y-6">
             {/* Store Stats Card */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-800 mb-6 text-lg">Informasi Toko</h3>
-              
+              <h3 className="font-bold text-gray-800 mb-6 text-lg">
+                Informasi Toko
+              </h3>
+
               <div className="space-y-5">
                 <div className="flex items-start gap-4">
                   <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
                     <Clock size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Jam Operasional</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                      Jam Operasional
+                    </p>
                     <p className="text-sm text-gray-700 font-medium mt-0.5">
-                      {store.open_at?.substring(0, 5)} - {store.close_at?.substring(0, 5)}
+                      {store.open_at?.substring(0, 5)} -{" "}
+                      {store.close_at?.substring(0, 5)}
                     </p>
                   </div>
                 </div>
@@ -293,8 +326,12 @@ export default function StoreDetailPage() {
                     <Phone size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Hubungi Toko</p>
-                    <p className="text-sm text-gray-700 font-medium mt-0.5">{store.phone_number || "-"}</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                      Hubungi Toko
+                    </p>
+                    <p className="text-sm text-gray-700 font-medium mt-0.5">
+                      {store.phone_number || "-"}
+                    </p>
                   </div>
                 </div>
 
@@ -303,8 +340,12 @@ export default function StoreDetailPage() {
                     <MapPin size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Alamat</p>
-                    <p className="text-sm text-gray-700 font-medium mt-0.5 leading-relaxed">{store.address}</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                      Alamat
+                    </p>
+                    <p className="text-sm text-gray-700 font-medium mt-0.5 leading-relaxed">
+                      {store.address}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -320,7 +361,10 @@ export default function StoreDetailPage() {
             <div className="bg-gradient-to-br from-orange-500 to-pink-500 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
               <div className="relative z-10">
                 <h4 className="font-bold text-lg mb-2">Punya Voucher?</h4>
-                <p className="text-white/80 text-sm mb-4">Gunakan voucher kamu untuk mendapatkan potongan harga di toko ini.</p>
+                <p className="text-white/80 text-sm mb-4">
+                  Gunakan voucher kamu untuk mendapatkan potongan harga di toko
+                  ini.
+                </p>
                 <button className="bg-white text-orange-600 font-bold px-4 py-2 rounded-xl text-sm shadow-md group-hover:px-6 transition-all">
                   Lihat Voucher
                 </button>
@@ -330,7 +374,6 @@ export default function StoreDetailPage() {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

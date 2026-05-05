@@ -1,10 +1,10 @@
 "use client";
 
 import { GoogleUser } from "@/types/google_user";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { postData } from "@/helper/apiHelper";
 
 interface CreatePasswordFormProps {
   google_user: GoogleUser;
@@ -33,18 +33,13 @@ export default function CreatePasswordForm({
     setLoading(true);
 
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await axios.post(
-        `${url}api/register-from-google`,
-        formData,
-      );
-      console.log(response.data);
+      const response = await postData("register-from-google", formData, router);
 
-      if (response.status === 200) {
-        toast.success(response.data.message);
+      if (response.success) {
+        toast.success(response.message || "Pendaftaran berhasil");
         router.push("/login");
       } else {
-        toast.error(response.data.message);
+        toast.error(response.message || "Pendaftaran gagal");
       }
     } catch (error: any) {
       console.log(error);

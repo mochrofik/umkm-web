@@ -29,7 +29,7 @@ interface StoreData {
   latitude: number | string;
   longitude: number | string;
   categories: CategoryOption[];
-  icon_new: any; 
+  icon_new: any;
   is_open: string | boolean;
 }
 
@@ -46,7 +46,13 @@ interface RawCategory {
   name: string;
 }
 
-export default function StoreForm({ isLoadingButton, data, setFormData, onChange, onSubmit}: StoreFormProps) {
+export default function StoreForm({
+  isLoadingButton,
+  data,
+  setFormData,
+  onChange,
+  onSubmit,
+}: StoreFormProps) {
   const [selectedImg, setSelectedImage] = useState<File | null>(null);
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -54,18 +60,19 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
-  const [kategoriTerpilih, setKategoriTerpilih] = useState<readonly CategoryOption[]>([]);
+  const [kategoriTerpilih, setKategoriTerpilih] = useState<
+    readonly CategoryOption[]
+  >([]);
 
   // --- Functions ---
 
   const fetchCategories = async (page: number = 1, limit: number = 1000) => {
     setIsLoading(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
       const response = await getData<any>(
-        `${url}api/categories-user?page=${page}&limit=${limit}`,
+        `categories-user?page=${page}&limit=${limit}`,
         // @ts-ignore (karena apiHelper kamu butuh router, namun di sini kita hanya fetch data global)
-        null 
+        null,
       );
 
       if (response && response.success) {
@@ -76,10 +83,9 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
           label: item.name,
         }));
 
-        if(formattedData){
+        if (formattedData) {
           setCategories(formattedData);
         }
-
       }
     } catch (error) {
       console.error(error);
@@ -106,12 +112,12 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
     if (imageToCrop) {
       const croppedImage = await getCroppedImg(imageToCrop, croppedPixels);
       setPreviewImg(URL.createObjectURL(croppedImage));
-      
+
       setFormData((prev: any) => ({
         ...prev,
-        icon_new: croppedImage
+        icon_new: croppedImage,
       }));
-      
+
       setShowCropper(false);
     }
   };
@@ -134,7 +140,7 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
       (err) => {
         toast.error("Gagal mengambil lokasi: " + err.message);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   };
 
@@ -187,7 +193,11 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
                 />
               ) : data.icon_new && data.icon_new !== "" ? (
                 <img
-                  src={typeof data.icon_new === 'string' ? data.icon_new : URL.createObjectURL(data.icon_new)}
+                  src={
+                    typeof data.icon_new === "string"
+                      ? data.icon_new
+                      : URL.createObjectURL(data.icon_new)
+                  }
                   alt="Preview Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -251,17 +261,23 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
           {/* Status Buka/Tutup Toggle */}
           <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${data.is_open == "1" || data.is_open === "true" ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${data.is_open == "1" || data.is_open === "true" ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
+              />
               <div>
-                <p className="text-sm font-bold text-slate-700">Status Toko Saat Ini</p>
+                <p className="text-sm font-bold text-slate-700">
+                  Status Toko Saat Ini
+                </p>
                 <p className="text-xs text-slate-500">
-                  {data.is_open == "1" || data.is_open === "true" ? "Toko Anda sedang BUKA dan terlihat oleh pelanggan" : "Toko Anda sedang TUTUP dan tidak menerima pesanan"}
+                  {data.is_open == "1" || data.is_open === "true"
+                    ? "Toko Anda sedang BUKA dan terlihat oleh pelanggan"
+                    : "Toko Anda sedang TUTUP dan tidak menerima pesanan"}
                 </p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 className="sr-only peer"
                 checked={data.is_open == "1" || data.is_open === "true"}
                 onChange={(e) => {
@@ -436,23 +452,17 @@ export default function StoreForm({ isLoadingButton, data, setFormData, onChange
       </section>
 
       <div className="flex justify-end pt-4">
-
         {isLoadingButton ? (
-
-          <Loading
-          fullPage={false}
-          />
+          <Loading fullPage={false} />
         ) : (
-
           <button
-          type="submit"
-          disabled={isLoadingButton}
-          className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-        >
-          Simpan Perubahan
-        </button>
+            type="submit"
+            disabled={isLoadingButton}
+            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+          >
+            Simpan Perubahan
+          </button>
         )}
-        
       </div>
 
       {showCropper && imageToCrop && (
