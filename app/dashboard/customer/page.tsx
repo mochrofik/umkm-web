@@ -143,9 +143,8 @@ export default function CustomerPage() {
       if (result.isConfirmed) {
         setLoadingState(true);
         try {
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
           const response = await deleteData(
-            `${url}api/customer/destroy/${id}`,
+            `customer/destroy/${id}`,
             router,
           );
           if (response.success) {
@@ -167,9 +166,8 @@ export default function CustomerPage() {
   const fetchData = async (page: Number = 1, search: string = "", filterKategori: string = "") => {
     setLoadingState(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
       const response = await getData<CustomerResponse>(
-        `${url}api/customer/get`,
+        `customer/get`,
         router,
         {
           page: page,

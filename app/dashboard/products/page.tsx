@@ -71,9 +71,8 @@ export default function ProductPage() {
   const fetchData = async (page: number = 1, search: string = "", filterKategori: string ="") => {
     try {
       setLoading(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
       const resProd = await getData(
-        `${url}api/product/get-product?page=${page}&search=${search}&limit=${perPage}&status=${filterKategori}`,
+        `product/get-product?page=${page}&search=${search}&limit=${perPage}&status=${filterKategori}`,
         router,
       );
       if (resProd.success) {
@@ -118,8 +117,7 @@ export default function ProductPage() {
             },
           });
 
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
-          await deleteData(`${url}api/product/destroy/${id}`, router);
+          await deleteData(`product/destroy/${id}`, router);
 
           Swal.fire({
             title: "Berhasil!",

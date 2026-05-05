@@ -17,7 +17,7 @@ import Image from "next/image";
 import axios from "axios";
 import Loading from "@/components/Loading";
 import getCroppedImg from "@/helper/cropImage/cropImage";
-import { deleteData, getData } from "@/helper/apiHelper";
+import { deleteData, getData, postData } from "@/helper/apiHelper";
 import { useRouter } from "next/navigation";
 import ImageCropper from "@/helper/cropImage/imageCropper";
 import Pagination from "@/components/Pagination";
@@ -67,9 +67,8 @@ export default function CategoryPage() {
   const fetchCategories = async (page: number = 1, search: string = "") => {
     try {
       setLoading(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
       const response = await getData(
-        `${url}api/category/get?page=${page}&search=${search}`,
+        `category/get?page=${page}&search=${search}`,
         router
       );
 
@@ -117,35 +116,24 @@ export default function CategoryPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    const token = localStorage.getItem("token");
     try {
       const payload = new FormData();
       payload.append("name", formData.name);
-      
+
       if (selectedImg) {
         payload.append("icon", selectedImg);
       }
-      
+
       if (editingCategory) {
         payload.append("id", editingCategory.id.toString());
       }
 
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await axios.post(
-        `${url}api/category/add-edit`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await postData("category/add-edit", payload, router);
 
       if (response.status === 200 || response.status === 201) {
         fetchCategories(currentPage, searchTerm);
         closeModal();
-        toast.success(response.data.message);
+        toast.success(response.message || "Kategori berhasil disimpan");
       }
     } catch (error) {
       toast.error("Terjadi kesalahan saat menyimpan data kategori");
@@ -174,8 +162,7 @@ export default function CategoryPage() {
             didOpen: () => Swal.showLoading(),
           });
 
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
-          await deleteData(`${url}api/category/destroy/${id}`, router  );
+          await deleteData(`category/destroy/${id}`, router  );
 
           Swal.fire({
             title: "Berhasil!",

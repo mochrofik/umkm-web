@@ -19,7 +19,7 @@ import dynamic from "next/dynamic";
 import api from "@/utils/axios";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { deleteData, getData } from "@/helper/apiHelper";
+import { deleteData, getData, postData } from "@/helper/apiHelper";
 import getCroppedImg from "@/helper/cropImage/cropImage";
 import Loading from "@/components/Loading";
 import ImageCropper from "@/helper/cropImage/imageCropper";
@@ -30,10 +30,9 @@ import { useAuth } from "@/AuthContext";
 
 // --- Interfaces ---
 
-
 export default function StorePage() {
   const router = useRouter();
-   const { role, user: authUser, logout } = useAuth();
+  const { role, user: authUser, logout } = useAuth();
   const [stores, setDataStores] = useState<Store[]>([]);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [loading, setLoadingState] = useState<boolean>(true);
@@ -42,7 +41,7 @@ export default function StorePage() {
   const [lastPage, setLastpage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  
+
   const initialFormData: StoreFormData = {
     name: "",
     id: null,
@@ -71,12 +70,10 @@ export default function StorePage() {
   const fetchStores = async (page: number = 1, search: string = "") => {
     try {
       setLoadingState(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await getData<StoreResponse>(
-        `${url}api/store/get`,
-        router,
-        { page, search }
-      );
+      const response = await getData<StoreResponse>(`store/get`, router, {
+        page,
+        search,
+      });
 
       if (response && response.success && response.data) {
         setDataStores(response.data.data.data);
@@ -160,7 +157,7 @@ export default function StorePage() {
       confirmButtonText: "Ya, Hapus!",
       cancelButtonText: "Batal",
       reverseButtons: true,
-    }).then(async (result:any) => {
+    }).then(async (result: any) => {
       if (result.isConfirmed) {
         try {
           Swal.fire({
@@ -169,10 +166,8 @@ export default function StorePage() {
             didOpen: () => Swal.showLoading(),
           });
 
-          const token = localStorage.getItem("token");
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
-          await deleteData(`${url}api/store/destroy/${id}`, router);
-          
+          await deleteData(`store/destroy/${id}`, router);
+
           Swal.fire({
             title: "Berhasil!",
             text: "Toko telah dihapus.",
@@ -210,7 +205,7 @@ export default function StorePage() {
         });
       },
       (err) => toast.error("Gagal mengambil lokasi: " + err.message),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   };
 
@@ -242,16 +237,12 @@ export default function StorePage() {
         payload.append("logo", selectedImg);
       }
 
-      const response = await api.post("store/add-edit", payload, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
+      const response = await postData("store/add-edit", payload, router);
 
       if (response.status === 200 || response.status === 201) {
         fetchStores(currentPage, searchTerm);
         closeModal();
-        toast.success(response.data.message);
+        toast.success(response.message ?? "Data toko berhasil ditambahkan");
       }
     } catch (error) {
       toast.error("Terjadi kesalahan saat memproses data");
@@ -262,7 +253,11 @@ export default function StorePage() {
 
   const MapPicker = dynamic(() => import("@/components/MapPicker"), {
     ssr: false,
-    loading: () => <div className="h-64 bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-400">Memuat Peta...</div>,
+    loading: () => (
+      <div className="h-64 bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-400">
+        Memuat Peta...
+      </div>
+    ),
   });
 
   useEffect(() => {
@@ -274,7 +269,9 @@ export default function StorePage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 font-poppins">Data Toko</h1>
+          <h1 className="text-2xl font-bold text-slate-800 font-poppins">
+            Data Toko
+          </h1>
           <p className="text-slate-500 text-sm">Kelola Data Toko UMKM</p>
         </div>
         <button
@@ -292,7 +289,10 @@ export default function StorePage() {
         <div className="w-full">
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Cari toko & tekan Enter..."
@@ -302,9 +302,7 @@ export default function StorePage() {
               />
             </div>
           </form>
-
         </div>
-        
       </div>
 
       {/* Table Section */}
@@ -313,12 +311,24 @@ export default function StorePage() {
           <table className="w-full text-left border-collapse font-poppins">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600">No</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Toko</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Kontak</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-center">Lokasi</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Status</th>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-right">Aksi</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+                  No
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+                  Toko
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+                  Kontak
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-center">
+                  Lokasi
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-right">
+                  Aksi
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -331,16 +341,22 @@ export default function StorePage() {
               ) : stores.length > 0 ? (
                 stores.map((store, index) => {
                   const rowNumber = (currentPage - 1) * perPage + (index + 1);
-                  const googleMapsUrl = store.latitude && store.longitude
-                    ? `https://www.google.com/maps?q=${store.latitude},${store.longitude}`
-                    : `https://www.google.com/maps/search/${encodeURIComponent(store.name + " " + store.address)}`;
+                  const googleMapsUrl =
+                    store.latitude && store.longitude
+                      ? `https://www.google.com/maps?q=${store.latitude},${store.longitude}`
+                      : `https://www.google.com/maps/search/${encodeURIComponent(store.name + " " + store.address)}`;
 
-                  
-                    const currentStatus = STATUS_MAP[store.user.status] || DEFAULT_STATUS;
-                  
-                    return (
-                    <tr key={store.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-slate-600 text-sm">{rowNumber}</td>
+                  const currentStatus =
+                    STATUS_MAP[store.user.status] || DEFAULT_STATUS;
+
+                  return (
+                    <tr
+                      key={store.id}
+                      className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-slate-600 text-sm">
+                        {rowNumber}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Image
@@ -352,44 +368,67 @@ export default function StorePage() {
                             className="object-cover rounded-lg border border-slate-100 h-10 w-10"
                           />
                           <div>
-                            <div className="font-bold text-slate-800 text-sm">{store.name}</div>
-                            <div className="text-xs text-slate-500">{store.user.email}</div>
-                            <div className="text-[11px] text-slate-500">⭐ {store.rating}</div>
+                            <div className="font-bold text-slate-800 text-sm">
+                              {store.name}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {store.user.email}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              ⭐ {store.rating}
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <div className="font-medium text-green-700">
-                          
-                           {store.phone_number ? (
-                          <a
-                            href={`https://wa.me/${store.phone_number}`}
-                            target="_blank"
-                            className="flex items-center gap-1 hover:text-green-600"
-                          >
-                            <Phone size={14} /> {store.phone_number}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                          </div>
-                        <div className="text-slate-400 text-xs truncate max-w-[150px]">{store.address}</div>
+                          {store.phone_number ? (
+                            <a
+                              href={`https://wa.me/${store.phone_number}`}
+                              target="_blank"
+                              className="flex items-center gap-1 hover:text-green-600"
+                            >
+                              <Phone size={14} /> {store.phone_number}
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </div>
+                        <div className="text-slate-400 text-xs truncate max-w-[150px]">
+                          {store.address}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-all">
+                        <a
+                          href={googleMapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-all"
+                        >
                           <Navigation size={18} />
                         </a>
                       </td>
                       <td className="px-6 py-4">
                         <span
-          className={`inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${currentStatus.color}`}
-        >
-          {currentStatus.label} </span>
+                          className={`inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${currentStatus.color}`}
+                        >
+                          {currentStatus.label}{" "}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1">
-                          <button onClick={() => openModal(store)} className="p-2 cursor-pointer text-blue-400 hover:text-blue-600 rounded-lg"><Pencil size={18} /></button>
-                          <button onClick={() => handleDelete(store.id)} className="p-2   cursor-pointer text-red-400 hover:text-red-600 rounded-lg"><Trash2 size={18} /></button>
+                          <button
+                            onClick={() => openModal(store)}
+                            className="p-2 cursor-pointer text-blue-400 hover:text-blue-600 rounded-lg"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(store.id)}
+                            className="p-2   cursor-pointer text-red-400 hover:text-red-600 rounded-lg"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -397,17 +436,26 @@ export default function StorePage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">Data toko tidak ditemukan.</td>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-10 text-center text-slate-400"
+                  >
+                    Data toko tidak ditemukan.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
           <Pagination
-          currentPage={currentPage}
-          lastPage={lastPage}
-          loading={loading}
-          setCurrentPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          setCurrentNext={() => setCurrentPage((prev) => Math.min(prev + 1, lastPage))}
+            currentPage={currentPage}
+            lastPage={lastPage}
+            loading={loading}
+            setCurrentPrev={() =>
+              setCurrentPage((prev) => Math.max(prev - 1, 1))
+            }
+            setCurrentNext={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, lastPage))
+            }
           />
         </div>
       </div>
@@ -420,11 +468,19 @@ export default function StorePage() {
               <h3 className="text-lg font-bold text-slate-800 font-poppins">
                 {editingStore ? "Edit Toko" : "Tambah Toko Baru"}
               </h3>
-              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+              <button
+                onClick={closeModal}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[70vh]">
-               <div className="p-6 space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="overflow-y-auto max-h-[70vh]"
+            >
+              <div className="p-6 space-y-4">
                 <div className="space-y-4">
                   <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Informasi Akun
@@ -651,7 +707,7 @@ export default function StorePage() {
                     </button>
                     <MapPicker
                       lat={Number(formData.latitude)}
-                      lng={Number(formData.longitude) }
+                      lng={Number(formData.longitude)}
                       onChange={(lat, lng) => {
                         setFormData({
                           ...formData,
@@ -699,7 +755,13 @@ export default function StorePage() {
               </div>
 
               <div className="px-6 py-4 bg-slate-50 flex justify-end gap-3 border-t">
-                <button type="button" onClick={closeModal} className="px-4 py-2 text-slate-600 font-bold">Batal</button>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2 text-slate-600 font-bold"
+                >
+                  Batal
+                </button>
                 <button
                   type="submit"
                   disabled={processing}
