@@ -26,12 +26,14 @@ import ImageCropper from "@/helper/cropImage/imageCropper";
 import Pagination from "@/components/Pagination";
 import { Store, StoreFormData, StoreResponse } from "@/types/stores";
 import { DEFAULT_STATUS, STATUS_MAP } from "@/types/status";
+import { useAuth } from "@/AuthContext";
 
 // --- Interfaces ---
 
 
 export default function StorePage() {
   const router = useRouter();
+   const { role, user: authUser, logout } = useAuth();
   const [stores, setDataStores] = useState<Store[]>([]);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [loading, setLoadingState] = useState<boolean>(true);
