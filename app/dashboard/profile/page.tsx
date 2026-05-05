@@ -4,6 +4,7 @@ import React, { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import Loading from "@/components/Loading";
 import StoreForm from "@/components/profile/StoreForm";
 import { getData } from "@/helper/apiHelper";
+import api from "@/utils/axios";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
@@ -44,7 +45,7 @@ export default function ProfilePage() {
   const { role } = useAuth();
   const [loading, setLoadingState] = useState<boolean>(true);
   const [loadingSave, setLoadingSave] = useState<boolean>(false);
-  
+
   const [formDataStore, setFormDataStore] = useState<StoreFormData>({
     name: "",
     id: null,
@@ -70,27 +71,29 @@ export default function ProfilePage() {
   const getProfile = async () => {
     try {
       setLoadingState(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      
-      const response = await getData<any>(`${url}api/get-profile`, router);
+      // Gunakan path relatif agar melewati proxy Next.js dan middleware
+      const response = await getData<any>(`get-profile`, router);
 
       if (response && response.success && response.data?.data) {
         const profile = response.data.data;
 
+        console.log(profile);
 
         if (profile.role === "store") {
           const store = profile.get_store ?? null;
-          console.log("store.store_categories",store.store_categories);
-          
-          if(store.store_categories == null){
+          console.log("store.store_categories", store.store_categories);
+
+          if (store.store_categories == null) {
             toast.error("Lengkapi data kategori toko terlebih dahulu");
           }
           const storeCategories = store.store_categories ?? [];
-          
-          const formattedCategories: CategoryOption[] = storeCategories?.map((item: any) => ({
-            value: item.category_id,
-            label: item.categories.name,
-          }));
+
+          const formattedCategories: CategoryOption[] = storeCategories?.map(
+            (item: any) => ({
+              value: item.category_id,
+              label: item.categories.name,
+            }),
+          );
 
           setFormDataStore({
             id: profile.id,
@@ -122,7 +125,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormDataStore((prev) => ({ ...prev, [name]: value }));
   };
@@ -130,12 +135,12 @@ export default function ProfilePage() {
   const handleSubmit = async (e: FormEvent) => {
     setLoadingSave(true);
     e.preventDefault();
-    const token = localStorage.getItem("token");
     const payload = new FormData();
 
     // Pastikan ID tidak null sebelum append
-    if (formDataStore.id) payload.append("id_user", formDataStore.id.toString());
-    
+    if (formDataStore.id)
+      payload.append("id_user", formDataStore.id.toString());
+
     payload.append("name", formDataStore.name);
     payload.append("description", formDataStore.description);
     payload.append("address", formDataStore.address);
@@ -159,11 +164,9 @@ export default function ProfilePage() {
     }
 
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const result = await axios.post(`${url}api/update-profile`, payload, {
-        headers: { 
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data" 
+      const result = await api.post(`update-profile`, payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -177,7 +180,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("err ", error);
       toast.error("Terjadi kesalahan saat memperbarui profil");
-    }finally{
+    } finally {
       setLoadingSave(false);
     }
   };
@@ -190,7 +193,7 @@ export default function ProfilePage() {
     <div className="p-6 max-w-12xl mx-auto font-poppins">
       {/* Header Navigasi */}
       <div className="flex items-center gap-4 mb-8">
-        <button 
+        <button
           onClick={() => router.back()}
           className="p-2 hover:bg-slate-100 rounded-full transition-colors"
         >
@@ -208,7 +211,7 @@ export default function ProfilePage() {
         <Loading fullPage={false} text="Memuat data profil..." />
       ) : role === "store" ? (
         <StoreForm
-        isLoadingButton={loadingSave}
+          isLoadingButton={loadingSave}
           data={formDataStore}
           onChange={handleChange}
           onSubmit={handleSubmit}

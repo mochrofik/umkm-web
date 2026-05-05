@@ -10,6 +10,7 @@ import React, {
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, Package, Tag, Save, X } from "lucide-react";
 import toast from "react-hot-toast";
+import api from "@/utils/axios";
 import axios from "axios";
 import Loading from "@/components/Loading";
 import { getData } from "@/helper/apiHelper";
@@ -78,10 +79,7 @@ export default function AddProductPage() {
   useEffect(() => {
     const fetchDataInitial = async () => {
       try {
-        const url = process.env.NEXT_PUBLIC_SITE_URL;
-
-        // Fetch Categories
-        const res = await getData(`${url}api/category/get-categories`, router);
+        const res = await getData(`category/get-categories`, router);
 
         if (res.success) {
           const data = (await res.data) as any;
@@ -93,7 +91,7 @@ export default function AddProductPage() {
         // Fetch Detail if Edit Mode
         if (isEditMode && productId) {
           const resEdit = await getData(
-            `${url}api/product/detail-product/${decodeId(productId) }`,
+            `product/detail-product/${decodeId(productId)}`,
           );
           if (resEdit.success) {
             const dataEdit = resEdit.data as any;
@@ -119,7 +117,7 @@ export default function AddProductPage() {
               setPreviewImg(
                 p.logo_url != null
                   ? p.logo_url
-                  : `${process.env.NEXT_PUBLIC_SITE_URL}storage/uploads/product/${p.image_url}`,
+                  : `/api/storage/uploads/product/${p.image_url}`, // Use proxy for storage if needed, or stick to direct if CORS is ok for images
               );
             }
           }
@@ -137,7 +135,6 @@ export default function AddProductPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    const token = localStorage.getItem("token");
 
     try {
       const payload = new FormData();
@@ -160,10 +157,7 @@ export default function AddProductPage() {
         payload.append("image", selectedImg);
       }
 
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      await axios.post(`${url}api/product/add-edit`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`product/add-edit`, payload);
 
       toast.success(
         isEditMode ? "Produk diperbarui!" : "Produk berhasil ditambahkan!",

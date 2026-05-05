@@ -37,11 +37,13 @@ const requestHandler = async <T>(
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("role");
+        
+        // Hapus juga cookie via API session
+        fetch('/api/auth/session', { method: 'DELETE' }).catch(() => {});
       }
 
       if(router && typeof window !== "undefined"){
         router.push("/login");
-
       }
     }
 

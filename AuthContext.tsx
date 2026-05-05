@@ -35,11 +35,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const savedRole = localStorage.getItem("role");
     const savedUser = localStorage.getItem("user");
-    const savedToken = localStorage.getItem("token");
-    if (savedRole && savedToken && savedUser) {
+    
+    // Kita tidak lagi mengambil token dari localStorage karena sekarang ada di HttpOnly Cookie
+    if (savedRole && savedUser) {
       const authPages = ["/login", "/register"];
       setRole(savedRole);
-      setToken(savedToken);
+      // Token di set null di state karena kita tidak bisa membacanya dari JS, 
+      // tapi Axios akan mengirimkannya via Cookie/Middleware
+      setToken("HIDDEN_IN_COOKIE"); 
       
       try {
         const userObj: User = JSON.parse(savedUser);
@@ -77,26 +80,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   }, [pathname]); // Tambahkan pathname sebagai dependency agar re-check saat pindah halaman
 
-  const login = (userData: User, userRole: string, userToken: string) => {
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("role", userRole);
-    localStorage.setItem("token", userToken);
+  const login = async (userData: User, userRole: string, userToken: string) => {
+    try {
+        // Simpan token ke HttpOnly Cookie via API route kita
+        await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: userToken }),
+        });
 
-    setUser(userData);
-    setRole(userRole);
-    setToken(userToken);
+        // Simpan data non-sensitif di localStorage agar UI tetap cepat
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("role", userRole);
+
+        setUser(userData);
+        setRole(userRole);
+        setToken("HIDDEN_IN_COOKIE");
+    } catch (error) {
+        console.error("Failed to set session", error);
+        toast.error("Gagal memproses session");
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    localStorage.removeItem("token");
+  const logout = async () => {
+    try {
+        // Hapus token dari HttpOnly Cookie
+        await fetch('/api/auth/session', { method: 'DELETE' });
 
-    setUser(null);
-    setRole(null);
-    setToken(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        localStorage.removeItem("token"); // Cleanup just in case
 
-    router.push("/login");
+        setUser(null);
+        setRole(null);
+        setToken(null);
+
+        router.push("/login");
+    } catch (error) {
+        console.error("Logout error", error);
+    }
   };
 
   return (

@@ -70,8 +70,7 @@ export default function OrdersPage() {
     
     setLoading(true);
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await api.get(`${url}api/order/incoming`, {
+      const response = await api.get(`order/incoming`, {
         params: {
           status: filterStatus,
           search: searchQuery
@@ -100,8 +99,7 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
     try {
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-      const response = await api.post(`${url}api/order/update-status/${orderId}`, {
+      const response = await api.post(`order/update-status/${orderId}`, {
         status: newStatus
       });
       

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import toast from "react-hot-toast";
+import api from "@/utils/axios";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
@@ -65,9 +66,8 @@ export default function CategoryPage() {
   const fetchCategories = async (page: number = 1, search: string = "", filter:string = "") => {
     try {
       setLoading(true);
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
       const response = await getData(
-        `${url}api/category/get-categories?limit=10&page=${page}&search=${search}&status=${filter}`,
+        `category/get-categories?limit=10&page=${page}&search=${search}&status=${filter}`,
       );
 
       if(response.success){
@@ -98,7 +98,6 @@ export default function CategoryPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setProcessing(true);
-    const token = localStorage.getItem("token");
 
     try {
       const payload: any = {
@@ -112,14 +111,11 @@ export default function CategoryPage() {
         payload.id = editingCategory.id;
       }
 
-      const url = process.env.NEXT_PUBLIC_SITE_URL;
-
-      const response = await axios.post(
-        `${url}api/category/add-edit-menu-categories`,
+      const response = await api.post(
+        `category/add-edit-menu-categories`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
         },
@@ -160,9 +156,8 @@ export default function CategoryPage() {
               Swal.showLoading();
             },
           });
-          const url = process.env.NEXT_PUBLIC_SITE_URL;
           const response = await deleteData(
-            `${url}api/category/destroy-menu-categories/${id}`,
+            `category/destroy-menu-categories/${id}`,
            router
           );
 

@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         source: '/edit-product/:id',
         destination: '/dashboard/products/add?id=:id',
       },
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:8000/'}api/:path*`,
+      },
     ];
   },
 

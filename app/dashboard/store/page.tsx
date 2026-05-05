@@ -16,7 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import axios from "axios";
+import api from "@/utils/axios";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import { deleteData, getData } from "@/helper/apiHelper";
@@ -229,7 +229,6 @@ export default function StorePage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    const token = localStorage.getItem("token");
 
     try {
       const payload = new FormData();
@@ -241,10 +240,8 @@ export default function StorePage() {
         payload.append("logo", selectedImg);
       }
 
-      const url = process.env.NEXT_PUBLIC_SITE_URL + "api/store/add-edit";
-      const response = await axios.post(url, payload, {
+      const response = await api.post("store/add-edit", payload, {
         headers: {
-          Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
       });
