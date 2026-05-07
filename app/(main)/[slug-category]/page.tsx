@@ -30,10 +30,10 @@ export default function CategoryPage() {
       if (lat && lng) {
         endpoint += `&lat=${lat}&lng=${lng}`;
       }
-      const response = await getData(endpoint);
+      const response = await getData<any>(endpoint);
 
       if (response.status == 200) {
-        const data = (await response.data) as Store[];
+        const data = (await response.data.data) as Store[];
         setStoreData(data);
       }
     } catch (error) {

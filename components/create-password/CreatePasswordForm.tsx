@@ -19,7 +19,7 @@ export default function CreatePasswordForm({
   const router = useRouter();
   const [formData, setFormData] = useState<any>({
     google_id: google_user.google_id,
-    role: role,
+    role: role ?? "customer",
     name: google_user.name,
     email: google_user.email,
     phone_number: "",
