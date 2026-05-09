@@ -18,7 +18,7 @@ export const googleCallbackService = async (code: string, role: string | null) =
 }
 
 export const registerFromGoogleService = async (payload: any) => {
-    const response = await postData("register-from-google", payload);
+    const response = await postData("register-google-customer", payload);
     return response;
 }
  

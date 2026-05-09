@@ -25,9 +25,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/AuthContext";
 
-// --- Interfaces ---
-
-interface CustomerFormData {
+interface ProfileResponse {
   id: number | string | null;
   name: string;
   email: string;
@@ -74,7 +72,7 @@ export default function CustomerProfilePage() {
     return `${user.substring(0, 1)}*********@${domain}`;
   };
 
-  const [formData, setFormData] = useState<CustomerFormData>({
+  const [formData, setFormData] = useState<ProfileResponse>({
     id: null,
     name: "",
     email: "",
@@ -97,25 +95,24 @@ export default function CustomerProfilePage() {
 
       if (response && response.success && response.data?.data) {
         const profile = response.data.data;
-        const customer = profile.get_customer ?? {};
         const store = profile.get_store ?? {};
 
         setFormData({
           id: profile.id,
           name: profile.name ?? "",
           email: profile.email ?? "",
-          phone_number: customer.phone_number ?? "",
-          nik: customer.nik ?? "",
-          gender: customer.gender ?? "",
-          date_of_birth: customer.date_of_birth ?? "",
-          address: customer.address ?? "",
-          postal_code: customer.postal_code ?? "",
-          avatar_url: customer.avatar_url ?? "",
+          phone_number: profile.phone_number ?? "",
+          nik: profile.nik ?? "",
+          gender: profile.gender ?? "",
+          date_of_birth: profile.date_of_birth ?? "",
+          address: profile.address ?? "",
+          postal_code: profile.postal_code ?? "",
+          avatar_url: profile.avatar_url ?? "",
           avatar_new: null,
         });
 
-        if (customer.avatar_url) {
-          setPreviewAvatar(customer.avatar_url);
+        if (profile.avatar_url) {
+          setPreviewAvatar(profile.avatar_url);
         }
       }
     } catch (error) {
@@ -151,10 +148,7 @@ export default function CustomerProfilePage() {
 
     try {
       const payload = new FormData();
-      if (formData.id) payload.append("id_user", formData.id.toString());
       payload.append("name", formData.name);
-      payload.append("email", formData.email);
-      payload.append("phone_number", formData.phone_number);
       payload.append("nik", formData.nik);
       payload.append("gender", formData.gender);
       payload.append("date_of_birth", formData.date_of_birth);
@@ -166,7 +160,7 @@ export default function CustomerProfilePage() {
         payload.append("avatar", formData.avatar_new);
       }
 
-      const response = await api.post("update-profile", payload, {
+      const response = await api.post("update-user", payload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -310,6 +304,8 @@ export default function CustomerProfilePage() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
+                      required
+                      minLength={3}
                       className="
                       font-poppins bg-gray-50 text-gray-900 ml-2 w-full outline-none text-sm"
                       placeholder="Nama Anda"

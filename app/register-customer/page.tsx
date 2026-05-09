@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ChevronLeft } from "lucide-react";
 import { getData, postData } from "@/helper/apiHelper";
+import InputUI from "@/components/ui/input/Input";
+import ButtonUI from "@/components/ui/button/Button";
+import Google from "next-auth/providers/google";
+import GoogleLogo from "@/components/ui/logo/google/Google";
 
 // Define interface untuk data form
 interface RegisterCustomerFormData {
@@ -16,7 +20,7 @@ interface RegisterCustomerFormData {
   status: string;
 }
 
-export default function RegisterUMKM() {
+export default function RegisterCustomer() {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -34,7 +38,7 @@ export default function RegisterUMKM() {
     setLoading(true);
 
     try {
-      const response = await postData(`register`, formData);
+      const response = await postData(`register-customer`, formData);
       if (response.success) {
         toast.success("Pendaftaran Berhasil!");
         router.push("/login");
@@ -93,77 +97,57 @@ export default function RegisterUMKM() {
               Data Pribadi
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Nama Lengkap
-                </label>
-                <input
-                  required
-                  type="text"
-                  className="mt-1 w-full p-3 border border-gray-200 text-black rounded-xl  outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.name}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <input
-                  required
-                  type="email"
-                  className="mt-1 w-full p-3 border border-gray-200 text-black rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-              </div>
+              <InputUI
+                label="Nama Lengkap"
+                required
+                minLength={3}
+                placeholder="Nama Lengkap"
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+              <InputUI
+                label="Email"
+                required
+                placeholder="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Nomor HP / WhatsApp
-              </label>
-              <input
-                type="text"
-                className="mt-1 w-full p-3 border border-gray-200 text-black rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.phone_number}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, phone_number: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Password (Min. 8 Karakter)
-              </label>
-              <input
-                required
-                minLength={8}
-                type="password"
-                className="mt-1 w-full p-3 border border-gray-200 text-black rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-              />
-            </div>
+            <InputUI
+              label="Nomor HP / WhatsApp"
+              required
+              minLength={10}
+              placeholder="Nomor HP / WhatsApp"
+              type="text"
+              value={formData.phone_number}
+              onChange={(e) =>
+                setFormData({ ...formData, phone_number: e.target.value })
+              }
+            />
+
+            <InputUI
+              label="Password (Min. 8 Karakter)"
+              required
+              minLength={8}
+              placeholder="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={` cursor-pointer w-full py-4 rounded-xl font-bold text-lg text-white transition shadow-lg ${
-              loading
-                ? "bg-gray-400"
-                : "bg-blue-600 hover:bg-blue-700 active:scale-95"
-            }`}
-          >
+          <ButtonUI type="submit" loading={loading}>
             {loading ? "Sedang Mendaftar..." : "Daftar Sekarang"}
-          </button>
+          </ButtonUI>
         </form>
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
@@ -176,34 +160,18 @@ export default function RegisterUMKM() {
           </div>
         </div>
 
-        <button
+        <ButtonUI
           type="button"
           onClick={() => loginGoogle()}
-          className="cursor-pointer w-full py-4 rounded-xl font-bold text-lg text-slate-700 bg-white border border-slate-200 flex items-center justify-center gap-3 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] shadow-sm group"
+          loading={loading}
+          bgColor="bg-slate-50"
+          textColor="text-black"
+          hoverBgColor="bg-white"
+          hoverTextColor="text-black"
         >
-          <svg
-            className="w-6 h-6 group-hover:scale-110 transition-transform"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              fill="#4285F4"
-            />
-            <path
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              fill="#34A853"
-            />
-            <path
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"
-              fill="#EA4335"
-            />
-          </svg>
+          <GoogleLogo />
           <span>Daftar dengan Google</span>
-        </button>
+        </ButtonUI>
 
         <p className="mt-8 text-center text-slate-500">
           Sudah punya akun?{" "}
