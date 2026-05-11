@@ -10,13 +10,13 @@ import { googleCallbackService } from "@/service/auth.service";
 
 export default function GoogleCallback() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
 
   const [googleUser, setGoogleUser] = useState<GoogleUser | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
+      const searchParams = useSearchParams();
       const code = searchParams.get("code");
       const role = localStorage.getItem("pending_role");
 
@@ -62,7 +62,7 @@ export default function GoogleCallback() {
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [router]);
 
   if (googleUser?.create_password && googleUser.role !== undefined) {
     return (
