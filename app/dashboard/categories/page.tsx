@@ -130,7 +130,7 @@ export default function CategoryPage() {
         payload.append("id", editingCategory.id.toString());
       }
 
-      const response = await postData("category/add-edit", payload, router);
+      const response = await postData("category/add-edit", payload);
 
       if (response.status === 200 || response.status === 201) {
         fetchCategories(currentPage, searchTerm);

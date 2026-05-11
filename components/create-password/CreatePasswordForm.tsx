@@ -4,7 +4,6 @@ import { GoogleUser } from "@/types/google_user";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { postData } from "@/helper/apiHelper";
 import { registerFromGoogleService } from "@/service/auth.service";
 import InputUI from "../ui/input/Input";
 import ButtonUI from "../ui/button/Button";

@@ -58,7 +58,7 @@ export default function RegisterUMKM() {
     try {
       const url = `register`;
 
-      const response = await postData(url, formData, router);
+      const response = await postData(url, formData);
 
       if (response.success) {
         toast.success("Pendaftaran Berhasil!");

@@ -73,7 +73,7 @@ export default function CustomerForm({
         formPayload.append("avatar", selectedFile);
       }
 
-      const response = await postData(`customer/add-edit`, formPayload, router);
+      const response = await postData(`customer/add-edit`, formPayload);
 
       if (response.success) {
         toast.success("Data berhasil disimpan");

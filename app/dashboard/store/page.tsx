@@ -237,7 +237,7 @@ export default function StorePage() {
         payload.append("logo", selectedImg);
       }
 
-      const response = await postData("store/add-edit", payload, router);
+      const response = await postData("store/add-edit", payload);
 
       if (response.status === 200 || response.status === 201) {
         fetchStores(currentPage, searchTerm);
